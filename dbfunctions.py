@@ -100,6 +100,63 @@ def setup(cursor):
         cursor.execute(query)
 
 
+def add_aadhar(aadhar_no, date, fname, lname):
+    if (
+        aadhar_no.isnumeric()
+        and len(aadhar_no) == 12
+        and datetime.strptime(date, "%d-%b-%Y")
+        and fname.isalpha()
+        and lname.isalpha()
+    ):
+        try:
+            cursor.execute(
+                f"INSERT INTO Aadhar_Details values ({aadhar_no},'{date.format('%d-%m-$Y')}','{lname}','{fname}')"
+            )
+            cursor.connection.commit()
+            # connection.commit()
+        except oracledb.IntegrityError as e:
+            (error_obj,) = e.args
+            print("Aadhar Number already exists")
+            print("Error Code:", error_obj.code)
+            print("Error Full Code:", error_obj.full_code)
+            print("Error Message:", error_obj.message)
+        else:
+            print(cursor.rowcount, "record inserted.")
+    else:
+        print("Values are not in the expected format")
+
+
+def add_account_details(accno, balance, password, owner_aadhar, nominee):
+    if not accno.isnumeric():
+        return "Account number is not numeric."
+    elif len(accno) < 8 or len(accno) > 12:
+        return "Account number length is invalid (must be between 8 and 12 characters)."
+    elif balance < 0:
+        return "Account balance must be positive."
+    elif len(owner_aadhar) != 12 or not owner_aadhar.isnumeric():
+        return (
+            "Owner's Aadhar number is invalid (must be numeric and 12 characters long)."
+        )
+    elif len(nominee) != 12 or not nominee.isnumeric():
+        return "Nominee's Aadhar number is invalid (must be numeric and 12 characters long)."
+    else:
+        try:
+            cursor.execute(
+                f"INSERT INTO Account_Details values({accno},{balance},'{password}','{owner_aadhar}','{nominee}')"
+            )
+            cursor.connection.commit()
+            #        connection.commit()
+
+        except oracledb.IntegrityError as e:
+            (error_obj,) = e.args
+            print("Account number already exists")
+            print("Error Code:", error_obj.code)
+            print("Error Full Code:", error_obj.full_code)
+            print("Error Message:", error_obj.message)
+        else:
+            print(cursor.rowcount, "record inserted.")
+
+
 if __name__ == "__main__":
     with open("pass.json") as f:
         pw = json.load(f)["pass"]
@@ -110,53 +167,11 @@ if __name__ == "__main__":
     cursor = connection.cursor()
 
     setup(cursor)
-
-
-def add_aadhar(aadhar_no,date,fname,lname):
-    if aadhar_no.isnumeric() and len(aadhar_no)==12 and datetime.strptime(date,"%d-%m-%y") and fname.isalpha() and lname.isalpha():
-        try:
-                f"""
-                cursor.execute("INSERT INTO Aadhar_Details values ({aadhar_no},{date},{lname},{fname}))"""
-                cursor.connection.commit()
-                # connection.commit()
-        except oracledb.IntegrityError as e:
-                error_obj, = e.args
-                print("Aadhar Number already exists")
-                print("Error Code:", error_obj.code)
-                print("Error Full Code:", error_obj.full_code)
-                print("Error Message:", error_obj.message)
-        else:
-                print(cursor.rowcount, "record inserted.")
-    else:
-        print("Values are not in the expected format")
-
-def add_account_details(accno,balance,password,owner_aadhar,nominee):
-        if not accno.isnumeric():
-                return "Account number is not numeric."
-        elif len(accno)<8 or len(accno)>12:
-                return "Account number length is invalid (must be between 8 and 12 characters)."
-        elif balance<0:
-                return "Account balance must be positive."
-        elif len(owner_aadhar)!=12 or not owner_aadhar.isnumeric():
-                return "Owner's Aadhar number is invalid (must be numeric and 12 characters long)."
-        elif len(nominee)!=12 or nominee.isnumeric():
-                return "Nominee's Aadhar number is invalid (must be numeric and 12 characters long)."
-        else:
-                try:
-                        f"""
-                                cursor.execute("INSERT INTO Account_Details values({accno},{balance},{password},{owner_aadhar},{nominee}))"""
-                        cursor.connection.commit()
-                        #        connection.commit() 
-
-                except oracledb.IntegrityError as e:
-                        error_obj, = e.args
-                        print("Account number already exists")
-                        print("Error Code:", error_obj.code)
-                        print("Error Full Code:", error_obj.full_code)
-                        print("Error Message:", error_obj.message)
-                else:
-                        print(cursor.rowcount, "record inserted.")
-
-
-
-
+    print(add_aadhar("123123123123", "20-Nov-2004", "Adi", "Prabhu"))
+    print(add_aadhar("123123123124", "07-Sep-2004", "Spu", "Bhat"))
+    print(
+        add_account_details(
+            "12341234", 500, "something", "123123123123", "123123123124"
+        )
+    )
+    [print(row) for row in cursor.execute("SELECT * FROM Account_Details")]
