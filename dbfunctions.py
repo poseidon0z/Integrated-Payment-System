@@ -1,5 +1,6 @@
 import oracledb
 import json
+from datetime import datetime
 
 
 def setup(cursor):
@@ -109,3 +110,22 @@ if __name__ == "__main__":
     cursor = connection.cursor()
 
     setup(cursor)
+
+
+def add_aadhar(aadhar_no,date,fname,lname):
+    if aadhar_no.isnumeric() and aadhar_no.len()==10 and datetime.strptime(date,"%d-%m-%y") and fname.isalpha() and lname.isalpha():
+        try:
+                f"""
+                cursor.execute("INSERT INTO Aadhar_Details values ({aadhar_no},{date},{lname},{fname}))"""
+                cursor.commit()
+        except oracledb.IntegrityError as e:
+                error_obj, = e.args
+                print("Aadhar Number already exists")
+                print("Error Code:", error_obj.code)
+                print("Error Full Code:", error_obj.full_code)
+                print("Error Message:", error_obj.message)
+        else:
+                print(cursor.rowcount, "record inserted.")
+    else:
+        print("Values are not in the expected format")
+
