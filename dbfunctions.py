@@ -370,6 +370,25 @@ def customer_withdraw(cid):
         print("Error Message:", error_obj.message)
     else:
         print(cursor.rowcount, "record(s) deleted from Customer_Details.")
+
+def Fetch_Account_balance(accno,pw):
+    try:
+        cursor.execute(
+            f"SELECT Account_Number,Balance from Account_Details WHERE Account_Number={accno} AND Password='{pw}'"
+        )
+        row =cursor.fetchone()
+        if row:
+            print("Account Number: "+ str(row[0]) +"\n" +"Balance: "+ str(row[1]))
+        else:
+            print("Account Not found or incorrect password")
+    except oracledb.IntegrityError as e:
+        error_obj, = e.args
+        print("Error deleting from Customer_Details:")
+        print("Error Code:", error_obj.code)
+        print("Error Full Code:", error_obj.full_code)
+        print("Error Message:", error_obj.message)
+    else:
+        print(cursor.rowcount, "Account Details successfully fetched.")    
           
 if __name__ == "__main__":
     with open("pass.json") as f:
@@ -402,6 +421,8 @@ if __name__ == "__main__":
     print(employee_resign(2))
     [print(row) for row in cursor.execute("SELECT * FROM Purchase_Details")]
     print(customer_withdraw("1111111112"))
+    print(Fetch_Account_balance(12312312,"Anything"))
+    print(Fetch_Account_balance(12312312,"Aything"))
     [print(row) for row in cursor.execute("SELECT * FROM Purchase_Details")]
     [print(row) for row in cursor.execute("SELECT * FROM Account_Details")]
     [print(row) for row in cursor.execute("SELECT * FROM Employee_Details")]
