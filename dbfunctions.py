@@ -388,7 +388,11 @@ def Fetch_Account_balance(accno,pw):
         print("Error Full Code:", error_obj.full_code)
         print("Error Message:", error_obj.message)
     else:
-        print(cursor.rowcount, "Account Details successfully fetched.")    
+        print(cursor.rowcount, "Account Details successfully fetched.")  
+
+def get_current_time():
+        now = datetime.now()
+        return now.strftime("%H:%M:%S")
           
 if __name__ == "__main__":
     with open("pass.json") as f:
@@ -426,3 +430,4 @@ if __name__ == "__main__":
     [print(row) for row in cursor.execute("SELECT * FROM Purchase_Details")]
     [print(row) for row in cursor.execute("SELECT * FROM Account_Details")]
     [print(row) for row in cursor.execute("SELECT * FROM Employee_Details")]
+    print(get_current_time())
