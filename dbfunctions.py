@@ -1,6 +1,8 @@
 import oracledb
 import json
 from datetime import datetime
+import time
+
 
 
 def setup(cursor):
@@ -38,7 +40,7 @@ def setup(cursor):
         """,
         """CREATE TABLE Purchase_Details (
                 Transaction_ID VARCHAR2(30) PRIMARY KEY,
-                Customer_ID VARCHAR2(15) NOT NULL,
+                Customer_ID VARCHAR2(15) NULL,  
                 Account_Number NUMBER,
                 debited_amount NUMBER CHECK (debited_amount > 0),
                 voucher_claimed VARCHAR2(10),
@@ -182,6 +184,7 @@ def add_account_contact(accno,phno):
                         print("Error Message:", error_obj.message)
                 else:
                         print(cursor.rowcount, "record inserted.")
+                        
 def add_customer_Details(cid,fname,mname,lname,mno):
         if not cid.isnumeric():
            return "Customer id is not numeric"
@@ -276,6 +279,7 @@ def add_Salary_Details (Dept,Des,Salary):
                 print("Error Message:", error_obj.message)
             else:
                 print(cursor.rowcount, "record inserted.")
+                
 def add_Employee_Details (Eid,Days_worked,accno,Des,Dept,Team):
     if Days_worked<0:
         print("Invalid days worked (no. of days worked should be positive)")
@@ -302,7 +306,71 @@ def add_Employee_Details (Eid,Days_worked,accno,Des,Dept,Team):
         else:
             print(cursor.rowcount, "record inserted.")
 
+            
+def add_Transaction_log(accno,send,Cred_debt):
+    # here send refers to senders/recievers account number
+    if Cred_debt not in ['C','D']:
+        return "The values should be C(Credit) or D(Debit)"
+    else:
+        try:
+            cursor.execute(
+                f"INSERT INTO Transaction_Log values({accno},{time.time()},{send},'{Cred_debt}')"
+            )
+            cursor.connection.commit()
+        except oracledb.IntegrityError as e:
+            (error_obj,) = e.args
+            print("Employee ID already exists")
+            print("Error Code:", error_obj.code)
+            print("Error Full Code:", error_obj.full_code)
+            print("Error Message:", error_obj.message)
+        else:
+            print(cursor.rowcount, "record inserted.")
 
+def employee_resign(Eid):
+    try:
+        cursor.execute(
+            f"DELETE FROM Employee_Details where Employee_ID={Eid}"
+        )
+        cursor.connection.commit()
+
+    except oracledb.IntegrityError as e:
+        error_obj, = e.args
+        print("Employee ID Does not exist")
+        print("Error Code:", error_obj.code)
+        print("Error Full Code:", error_obj.full_code)
+        print("Error Message:", error_obj.message)
+    else:
+        print(cursor.rowcount, "record Deleted.")
+        
+def customer_withdraw(cid):
+    try:
+        cursor.execute(
+            f"UPDATE Purchase_Details SET Customer_ID=NULL WHERE Customer_ID='{cid}'"
+        )
+        cursor.connection.commit()
+    except oracledb.IntegrityError as e:
+        error_obj, = e.args
+        print("Error updating Purchase_Details:")
+        print("Error Code:", error_obj.code)
+        print("Error Full Code:", error_obj.full_code)
+        print("Error Message:", error_obj.message)
+    else:
+        print(cursor.rowcount, "record(s) of Purchase_Details updated successfully.")
+
+    try:
+        cursor.execute(
+            f"DELETE from Customer_Details where Customer_ID='{cid}'"
+        )
+        cursor.connection.commit()
+    except oracledb.IntegrityError as e:
+        error_obj, = e.args
+        print("Error deleting from Customer_Details:")
+        print("Error Code:", error_obj.code)
+        print("Error Full Code:", error_obj.full_code)
+        print("Error Message:", error_obj.message)
+    else:
+        print(cursor.rowcount, "record(s) deleted from Customer_Details.")
+          
 if __name__ == "__main__":
     with open("pass.json") as f:
         pw = json.load(f)["pass"]
@@ -329,4 +397,11 @@ if __name__ == "__main__":
     print(add_Employee_Details(1,30,12341234,'IT','Manager','Right'))
     print(add_Salary_Details('IT','Manager',45000))
     print(add_Shop_Inventory('1234567891','Juice'))
+    print(add_Transaction_log(12312312,12341234,'C'))
+    print(employee_resign(1))
+    print(employee_resign(2))
+    [print(row) for row in cursor.execute("SELECT * FROM Purchase_Details")]
+    print(customer_withdraw("1111111112"))
+    [print(row) for row in cursor.execute("SELECT * FROM Purchase_Details")]
     [print(row) for row in cursor.execute("SELECT * FROM Account_Details")]
+    [print(row) for row in cursor.execute("SELECT * FROM Employee_Details")]
