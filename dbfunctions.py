@@ -4,7 +4,6 @@ from datetime import datetime
 import time
 
 
-
 def setup(cursor):
     creation_queries = [
         """CREATE TABLE Aadhar_Details (
@@ -103,17 +102,17 @@ def setup(cursor):
 
 
 def add_aadhar(aadhar_no, date, fname, lname):
-     if not aadhar_no.isnumeric():
-          return "Aadhar number is not numeric"
-     elif len(aadhar_no)!=12:
-          return "Aadhar number length is invalid(must be 12)"
-     elif not datetime.strptime(date,"%d-%b-%Y"):
-          return "DATE of Birth invalid(must be in DD/MM/YYYY format)"
-     elif not fname.isalpha():
-          return "Invalid first name"
-     elif not lname.isalpha():
-          return "Invalid Last name"
-     else:
+    if not aadhar_no.isnumeric():
+        return "Aadhar number is not numeric"
+    elif len(aadhar_no) != 12:
+        return "Aadhar number length is invalid(must be 12)"
+    elif not datetime.strptime(date, "%d-%b-%Y"):
+        return "DATE of Birth invalid(must be in DD/MM/YYYY format)"
+    elif not fname.isalpha():
+        return "Invalid first name"
+    elif not lname.isalpha():
+        return "Invalid Last name"
+    else:
         try:
             cursor.execute(
                 f"INSERT INTO Aadhar_Details values ({aadhar_no},'{date.format('%d-%b-%Y')}','{lname}','{fname}')"
@@ -159,138 +158,148 @@ def add_account_details(accno, balance, password, owner_aadhar, nominee):
             print("Error Message:", error_obj.message)
         else:
             print(cursor.rowcount, "record inserted.")
-            
-def add_account_contact(accno,phno):
-        # if not accno.isnumeric():
-        #         return "Account number is not numeric."
-        # elif len(accno)<8 or len(accno)>12:
-        #         return "Account number length is invalid (must be between 8 and 12 characters)."
-        # if len(phno)!=10:
-        #        return "Invalid phone number"
 
-                try:
-                        
-                    cursor.execute(
-                        f" INSERT INTO Account_Contacts values({accno},{phno})"
-                                )
-                    cursor.connection.commit()
-                        #        connection.commit() 
 
-                except oracledb.IntegrityError as e:
-                        (error_obj,) = e.args
-                        print("Account number already exists")
-                        print("Error Code:", error_obj.code)
-                        print("Error Full Code:", error_obj.full_code)
-                        print("Error Message:", error_obj.message)
-                else:
-                        print(cursor.rowcount, "record inserted.")
-                        
-def add_customer_Details(cid,fname,mname,lname,mno):
-        if not cid.isnumeric():
-           return "Customer id is not numeric"
-        elif len(cid)!=10:
-            return "Customer id is invalid (must be of 10 digits)"
-        elif not fname.isalpha():
-            return "Invalid first name"
-        elif not mname.isalpha():
-            return "Invalid Middle name"
-        elif not lname.isalpha():
-            return "Invalid Last name"
-        elif not mno.isnumeric():
-            return "Mobile Number is not numeric"
-        elif len(mno)!=10:
-            return "Mobile number should bo of 10 degits "
+def add_account_contact(accno, phno):
+    # if not accno.isnumeric():
+    #         return "Account number is not numeric."
+    # elif len(accno)<8 or len(accno)>12:
+    #         return "Account number length is invalid (must be between 8 and 12 characters)."
+    # if len(phno)!=10:
+    #        return "Invalid phone number"
+
+    try:
+
+        cursor.execute(f" INSERT INTO Account_Contacts values({accno},{phno})")
+        cursor.connection.commit()
+        #        connection.commit()
+
+    except oracledb.IntegrityError as e:
+        (error_obj,) = e.args
+        print("Account number already exists")
+        print("Error Code:", error_obj.code)
+        print("Error Full Code:", error_obj.full_code)
+        print("Error Message:", error_obj.message)
+    else:
+        print(cursor.rowcount, "record inserted.")
+
+
+def add_customer_Details(cid, fname, mname, lname, mno):
+    if not cid.isnumeric():
+        return "Customer id is not numeric"
+    elif len(cid) != 10:
+        return "Customer id is invalid (must be of 10 digits)"
+    elif not fname.isalpha():
+        return "Invalid first name"
+    elif not mname.isalpha():
+        return "Invalid Middle name"
+    elif not lname.isalpha():
+        return "Invalid Last name"
+    elif not mno.isnumeric():
+        return "Mobile Number is not numeric"
+    elif len(mno) != 10:
+        return "Mobile number should bo of 10 degits "
+    else:
+        try:
+            cursor.execute(
+                f"INSERT INTO Customer_Details values('{cid}','{fname}','{mname}','{lname}','{mno}')"
+            )
+            cursor.connection.commit()
+        except oracledb.IntegrityError as e:
+            (error_obj,) = e.args
+            print("Customer ID already exists")
+            print("Error Code:", error_obj.code)
+            print("Error Full Code:", error_obj.full_code)
+            print("Error Message:", error_obj.message)
         else:
-            try:
-                cursor.execute(
-                f"INSERT INTO Customer_Details values('{cid}','{fname}','{mname}','{lname}','{mno}')")
-                cursor.connection.commit()
-            except oracledb.IntegrityError as e:
-                (error_obj,) = e.args
-                print("Customer ID already exists")
-                print("Error Code:", error_obj.code)
-                print("Error Full Code:", error_obj.full_code)
-                print("Error Message:", error_obj.message)
-            else:
-                print(cursor.rowcount, "record inserted.")
-                
-def add_Purchase_Details(tid,cid,accno,debited_amount,voucher_claimed,Mode_of_Payment):
-        if not tid.isnumeric():
-            return "Transaction id not numeric"
-        elif not cid.isnumeric():
-           return "Customer id is not numeric"
-        elif len(cid)!=10:
-            return "Customer id is invalid (must be of 10 digits)"
-        # elif not accno.isnumeric():
-        #     return "Account number is not numeric."
-        # elif len(accno)<8 or len(accno)>12:
-        #     return "Account number length is invalid (must be between 8 and 12 characters)."
-        elif debited_amount<0:
-            return "Invalid Amount(Amount should be positive)"
-        # elif 
-        elif Mode_of_Payment not in ['cash', 'UPI', 'creditCard', 'debitCard']:
-            return "mode of payment should either be in cash, UPI, creditCard or debitCard"
+            print(cursor.rowcount, "record inserted.")
+
+
+def add_Purchase_Details(
+    tid, cid, accno, debited_amount, voucher_claimed, Mode_of_Payment
+):
+    if not tid.isnumeric():
+        return "Transaction id not numeric"
+    elif not cid.isnumeric():
+        return "Customer id is not numeric"
+    elif len(cid) != 10:
+        return "Customer id is invalid (must be of 10 digits)"
+    # elif not accno.isnumeric():
+    #     return "Account number is not numeric."
+    # elif len(accno)<8 or len(accno)>12:
+    #     return "Account number length is invalid (must be between 8 and 12 characters)."
+    elif debited_amount < 0:
+        return "Invalid Amount(Amount should be positive)"
+    # elif
+    elif Mode_of_Payment not in ["cash", "UPI", "creditCard", "debitCard"]:
+        return "mode of payment should either be in cash, UPI, creditCard or debitCard"
+    else:
+        try:
+            cursor.execute(
+                f"INSERT INTO Purchase_Details values('{tid}','{cid}',{accno},{debited_amount},'{voucher_claimed}','{Mode_of_Payment}')"
+            )
+            cursor.connection.commit()
+        except oracledb.IntegrityError as e:
+            (error_obj,) = e.args
+            print("Transaction ID already exists")
+            print("Error Code:", error_obj.code)
+            print("Error Full Code:", error_obj.full_code)
+            print("Error Message:", error_obj.message)
         else:
-            try:
-                cursor.execute(
-                f"INSERT INTO Purchase_Details values('{tid}','{cid}',{accno},{debited_amount},'{voucher_claimed}','{Mode_of_Payment}')")
-                cursor.connection.commit()
-            except oracledb.IntegrityError as e:
-                (error_obj,) = e.args
-                print("Transaction ID already exists")
-                print("Error Code:", error_obj.code)
-                print("Error Full Code:", error_obj.full_code)
-                print("Error Message:", error_obj.message)
-            else:
-                print(cursor.rowcount, "record inserted.")
-def add_Shop_Inventory (tid,Items):
-        if not tid.isnumeric():
-            return "Transaction id not numeric"
-        # elif
+            print(cursor.rowcount, "record inserted.")
+
+
+def add_Shop_Inventory(tid, Items):
+    if not tid.isnumeric():
+        return "Transaction id not numeric"
+    # elif
+    else:
+        try:
+            cursor.execute(f"INSERT INTO Shop_Inventory values('{tid}','{Items}')")
+            cursor.connection.commit()
+        except oracledb.IntegrityError as e:
+            (error_obj,) = e.args
+            print("Transaction ID already exists")
+            print("Error Code:", error_obj.code)
+            print("Error Full Code:", error_obj.full_code)
+            print("Error Message:", error_obj.message)
         else:
-            try:
-                cursor.execute(
-                f"INSERT INTO Shop_Inventory values('{tid}','{Items}')")
-                cursor.connection.commit()
-            except oracledb.IntegrityError as e:
-                (error_obj,) = e.args
-                print("Transaction ID already exists")
-                print("Error Code:", error_obj.code)
-                print("Error Full Code:", error_obj.full_code)
-                print("Error Message:", error_obj.message)
-            else:
-                print(cursor.rowcount, "record inserted.")
-def add_Salary_Details (Dept,Des,Salary):
-        if not Dept.isalpha():
-            return ("Invalid Department")
-        elif not Des.isalpha():
-            return ("Invalid Designation")
-        elif Salary<0:
-            return("Invalid Salary (Salary should be positive)")
+            print(cursor.rowcount, "record inserted.")
+
+
+def add_Salary_Details(Dept, Des, Salary):
+    if not Dept.isalpha():
+        return "Invalid Department"
+    elif not Des.isalpha():
+        return "Invalid Designation"
+    elif Salary < 0:
+        return "Invalid Salary (Salary should be positive)"
+    else:
+        try:
+            cursor.execute(
+                f"INSERT INTO Salary_Details values('{Dept}','{Des}',{Salary})"
+            )
+            cursor.connection.commit()
+        except oracledb.IntegrityError as e:
+            (error_obj,) = e.args
+            print("Error Code:", error_obj.code)
+            print("Error Full Code:", error_obj.full_code)
+            print("Error Message:", error_obj.message)
         else:
-            try:
-                cursor.execute(
-                f"INSERT INTO Salary_Details values('{Dept}','{Des}',{Salary})")
-                cursor.connection.commit()
-            except oracledb.IntegrityError as e:
-                (error_obj,) = e.args
-                print("Error Code:", error_obj.code)
-                print("Error Full Code:", error_obj.full_code)
-                print("Error Message:", error_obj.message)
-            else:
-                print(cursor.rowcount, "record inserted.")
-                
-def add_Employee_Details (Eid,Days_worked,accno,Des,Dept,Team):
-    if Days_worked<0:
+            print(cursor.rowcount, "record inserted.")
+
+
+def add_Employee_Details(Eid, Days_worked, accno, Des, Dept, Team):
+    if Days_worked < 0:
         print("Invalid days worked (no. of days worked should be positive)")
     # elif not accno.isnumeric():
     #     return "Account number is not numeric."
     # elif len(accno)<8 or len(accno)>12:
     #     return "Account number length is invalid (must be between 8 and 12 characters)."
     elif not Dept.isalpha():
-        return ("Invalid Department")
+        return "Invalid Department"
     elif not Des.isalpha():
-        return ("Invalid Designation")
+        return "Invalid Designation"
     else:
         try:
             cursor.execute(
@@ -306,10 +315,10 @@ def add_Employee_Details (Eid,Days_worked,accno,Des,Dept,Team):
         else:
             print(cursor.rowcount, "record inserted.")
 
-            
-def add_Transaction_log(accno,send,Cred_debt):
+
+def add_Transaction_log(accno, send, Cred_debt):
     # here send refers to senders/recievers account number
-    if Cred_debt not in ['C','D']:
+    if Cred_debt not in ["C", "D"]:
         return "The values should be C(Credit) or D(Debit)"
     else:
         try:
@@ -326,22 +335,22 @@ def add_Transaction_log(accno,send,Cred_debt):
         else:
             print(cursor.rowcount, "record inserted.")
 
+
 def employee_resign(Eid):
     try:
-        cursor.execute(
-            f"DELETE FROM Employee_Details where Employee_ID={Eid}"
-        )
+        cursor.execute(f"DELETE FROM Employee_Details where Employee_ID={Eid}")
         cursor.connection.commit()
 
     except oracledb.IntegrityError as e:
-        error_obj, = e.args
+        (error_obj,) = e.args
         print("Employee ID Does not exist")
         print("Error Code:", error_obj.code)
         print("Error Full Code:", error_obj.full_code)
         print("Error Message:", error_obj.message)
     else:
         print(cursor.rowcount, "record Deleted.")
-        
+
+
 def customer_withdraw(cid):
     try:
         cursor.execute(
@@ -349,7 +358,7 @@ def customer_withdraw(cid):
         )
         cursor.connection.commit()
     except oracledb.IntegrityError as e:
-        error_obj, = e.args
+        (error_obj,) = e.args
         print("Error updating Purchase_Details:")
         print("Error Code:", error_obj.code)
         print("Error Full Code:", error_obj.full_code)
@@ -358,12 +367,10 @@ def customer_withdraw(cid):
         print(cursor.rowcount, "record(s) of Purchase_Details updated successfully.")
 
     try:
-        cursor.execute(
-            f"DELETE from Customer_Details where Customer_ID='{cid}'"
-        )
+        cursor.execute(f"DELETE from Customer_Details where Customer_ID='{cid}'")
         cursor.connection.commit()
     except oracledb.IntegrityError as e:
-        error_obj, = e.args
+        (error_obj,) = e.args
         print("Error deleting from Customer_Details:")
         print("Error Code:", error_obj.code)
         print("Error Full Code:", error_obj.full_code)
@@ -371,29 +378,47 @@ def customer_withdraw(cid):
     else:
         print(cursor.rowcount, "record(s) deleted from Customer_Details.")
 
-def Fetch_Account_balance(accno,pw):
+
+def Fetch_Account_balance(accno, pw):
     try:
         cursor.execute(
             f"SELECT Account_Number,Balance from Account_Details WHERE Account_Number={accno} AND Password='{pw}'"
         )
-        row =cursor.fetchone()
+        row = cursor.fetchone()
         if row:
-            print("Account Number: "+ str(row[0]) +"\n" +"Balance: "+ str(row[1]))
+            print("Account Number: " + str(row[0]) + "\n" + "Balance: " + str(row[1]))
+            return row[1]
         else:
             print("Account Not found or incorrect password")
     except oracledb.IntegrityError as e:
-        error_obj, = e.args
+        (error_obj,) = e.args
         print("Error deleting from Customer_Details:")
         print("Error Code:", error_obj.code)
         print("Error Full Code:", error_obj.full_code)
         print("Error Message:", error_obj.message)
     else:
-        print(cursor.rowcount, "Account Details successfully fetched.")  
+        print(cursor.rowcount, "Account Details successfully fetched.")
+
 
 def get_current_time():
-        now = datetime.now()
-        return now.strftime("%H:%M:%S")
-          
+    now = datetime.now()
+    return now.strftime("%H:%M:%S")
+
+
+with open("pass.json") as f:
+    pw = json.load(f)["pass"]
+
+connection = oracledb.connect(user="SYSTEM", password=pw, dsn="localhost/xepdb1")
+
+print("Successfully connected to Oracle Database")
+cursor = connection.cursor()
+
+setup(cursor)
+add_aadhar("123123123123", "20-Nov-2004", "Adi", "Prabhu")
+add_aadhar("123123123124", "07-Sep-2004", "Spu", "Bhat")
+add_account_details(12341234, 500, "something", "123123123123", "123123123124")
+
+
 if __name__ == "__main__":
     with open("pass.json") as f:
         pw = json.load(f)["pass"]
@@ -406,27 +431,27 @@ if __name__ == "__main__":
     setup(cursor)
     print(add_aadhar("123123123123", "20-Nov-2004", "Adi", "Prabhu"))
     print(add_aadhar("123123123124", "07-Sep-2004", "Spu", "Bhat"))
-    print(add_aadhar("131313131313", "9-Mar-2004","Venkatsai","Siri"))
-    print(add_aadhar("101010101010","30-Apr-2005","Kutta","Thambi"))
+    print(add_aadhar("131313131313", "9-Mar-2004", "Venkatsai", "Siri"))
+    print(add_aadhar("101010101010", "30-Apr-2005", "Kutta", "Thambi"))
     print(
-        add_account_details(
-            12341234, 500, "something", "123123123123", "123123123124"
-        )
+        add_account_details(12341234, 500, "something", "123123123123", "123123123124")
     )
-    print(add_account_details(12312312,1000,"Anything","131313131313","101010101010"))
-    print(add_customer_Details("1111111111","Spu","N","Bhat","1212121212"))
-    print(add_account_contact(12312312,1122334455))
-    print(add_Purchase_Details("1234567891","1111111111",12341234,100,"1","UPI"))
-    print(add_Employee_Details(1,30,12341234,'IT','Manager','Right'))
-    print(add_Salary_Details('IT','Manager',45000))
-    print(add_Shop_Inventory('1234567891','Juice'))
-    print(add_Transaction_log(12312312,12341234,'C'))
+    print(
+        add_account_details(12312312, 1000, "Anything", "131313131313", "101010101010")
+    )
+    print(add_customer_Details("1111111111", "Spu", "N", "Bhat", "1212121212"))
+    print(add_account_contact(12312312, 1122334455))
+    print(add_Purchase_Details("1234567891", "1111111111", 12341234, 100, "1", "UPI"))
+    print(add_Employee_Details(1, 30, 12341234, "IT", "Manager", "Right"))
+    print(add_Salary_Details("IT", "Manager", 45000))
+    print(add_Shop_Inventory("1234567891", "Juice"))
+    print(add_Transaction_log(12312312, 12341234, "C"))
     print(employee_resign(1))
     print(employee_resign(2))
     [print(row) for row in cursor.execute("SELECT * FROM Purchase_Details")]
     print(customer_withdraw("1111111112"))
-    print(Fetch_Account_balance(12312312,"Anything"))
-    print(Fetch_Account_balance(12312312,"Aything"))
+    print(Fetch_Account_balance(12312312, "Anything"))
+    print(Fetch_Account_balance(12312312, "Aything"))
     [print(row) for row in cursor.execute("SELECT * FROM Purchase_Details")]
     [print(row) for row in cursor.execute("SELECT * FROM Account_Details")]
     [print(row) for row in cursor.execute("SELECT * FROM Employee_Details")]
