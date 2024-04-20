@@ -390,20 +390,109 @@ def Fetch_Account_balance(accno, pw):
             return row[1]
         else:
             print("Account Not found or incorrect password")
+            return "Account Not found or incorrect password"
     except oracledb.IntegrityError as e:
         (error_obj,) = e.args
         print("Error deleting from Customer_Details:")
         print("Error Code:", error_obj.code)
         print("Error Full Code:", error_obj.full_code)
         print("Error Message:", error_obj.message)
-    else:
-        print(cursor.rowcount, "Account Details successfully fetched.")
 
 
 def get_current_time():
     now = datetime.now()
-    return now.strftime("%H:%M:%S")
+    return now
+    # return now.strftime("%H:%M:%S")
 
+# update_balance will not work for wrong account number
+
+def update_balance(accno,amount,func):
+    try:
+        cursor.execute(
+            f"SELECT Balance from Account_Details WHERE Account_Number={accno}"
+        )
+        balance=cursor.fetchone()[0] 
+
+    except oracledb.IntegrityError as e:
+        (error_obj,) = e.args
+        print("Error deleting from Customer_Details:")
+        print("Error Code:", error_obj.code)
+        print("Error Full Code:", error_obj.full_code)
+        print("Error Message:", error_obj.message)
+        return ("Error Occured")
+    if(func=='D'or func=='d'):
+        balance+=amount
+    elif(func=="W" or func=="w"):
+        balance-=amount
+    else:
+        return "Invalid Entry"
+    try:
+        cursor.execute(
+            f"UPDATE Account_Details SET Balance={balance} WHERE Account_Number={accno}"
+        )
+    except oracledb.IntegrityError as e:
+        (error_obj,) = e.args
+        print("Error deleting from Customer_Details:")
+        print("Error Code:", error_obj.code)
+        print("Error Full Code:", error_obj.full_code)
+        print("Error Message:", error_obj.message)
+        return ("Error Occured")
+    else:
+        print("Successfully Updated")
+        return("Successfully updated")  
+    
+        
+def transaction(sender_acc,pw,reciever_acc,amount):
+    sender_bal=Fetch_Account_balance(sender_acc,pw)
+    if(sender_bal=="Account Not found or incorrect password" ):
+        print("Inavalid Sender's account number")
+        return "Invalid Sender's Account number"
+    elif (amount>=sender_bal):
+        print("Insufficient Balance")
+        return "Insufficient Balance"
+    try:
+        cursor.execute(
+                f"SELECT Balance from Account_Details WHERE Account_Number={reciever_acc}"
+            )
+        reciever_bal = cursor.fetchone()
+    except oracledb.IntegrityError as e:
+        (error_obj,) = e.args
+        print("Error deleting from Customer_Details:")
+        print("Error Code:", error_obj.code)
+        print("Error Full Code:", error_obj.full_code)
+        print("Error Message:", error_obj.message)
+    if(not reciever_bal):
+        print("Invalid Reciever's account number")        
+        return ("Invalid Reciever's account number")
+    update_balance(sender_acc,amount,'W')
+    update_balance(reciever_acc,amount,'D')
+    add_Transaction_log(sender_acc,reciever_acc,"D")
+    add_Transaction_log(reciever_acc,sender_acc,"C")
+    
+    
+def deposit_salary():
+    try:
+        cursor.execute(
+            f"SELECT e.Employee_ID, e.Account_Number, s.Salary FROM Employee_Details e INNER JOIN Salary_Details s ON e.Designation = s.Designation AND e.Department = s.Department"
+            
+        )
+        result_set = cursor.fetchall()
+        print(result_set)
+        for i in range(len(result_set)):
+            update_balance(result_set[i][1],result_set[i][2],'D')
+    except oracledb.IntegrityError as e:
+        (error_obj,) = e.args
+        print("Error deleting from Customer_Details:")
+        print("Error Code:", error_obj.code)
+        print("Error Full Code:", error_obj.full_code)
+        print("Error Message:", error_obj.message)
+        return ("Error Occured")
+
+#  def get_transaction_details(accno,s_time=0,c_time=time.time()):
+#      try:
+#          cursor.execute(
+#              f"SELECT "
+#          )
 
 with open("pass.json") as f:
     pw = json.load(f)["pass"]
@@ -442,8 +531,9 @@ if __name__ == "__main__":
     print(add_customer_Details("1111111111", "Spu", "N", "Bhat", "1212121212"))
     print(add_account_contact(12312312, 1122334455))
     print(add_Purchase_Details("1234567891", "1111111111", 12341234, 100, "1", "UPI"))
-    print(add_Employee_Details(1, 30, 12341234, "IT", "Manager", "Right"))
     print(add_Salary_Details("IT", "Manager", 45000))
+    print(add_Salary_Details("IT", "WebDeveloper", 70000))
+
     print(add_Shop_Inventory("1234567891", "Juice"))
     print(add_Transaction_log(12312312, 12341234, "C"))
     print(employee_resign(1))
@@ -454,5 +544,17 @@ if __name__ == "__main__":
     print(Fetch_Account_balance(12312312, "Aything"))
     [print(row) for row in cursor.execute("SELECT * FROM Purchase_Details")]
     [print(row) for row in cursor.execute("SELECT * FROM Account_Details")]
-    [print(row) for row in cursor.execute("SELECT * FROM Employee_Details")]
     print(get_current_time())
+    print(transaction(12312312, "Anything",12341234,100))
+    # update_balance(12341234,100,'W')
+    [print(row) for row in cursor.execute("SELECT * FROM Account_Details")]
+    [print(row) for row in cursor.execute("SELECT * FROM Transaction_Log")]
+    print(add_Employee_Details(1, 30, 12341234, "Manager", "IT", "Right"))
+    print(add_Employee_Details(2, 30, 12312312, "WebDeveloper", "IT", "Right"))
+    [print(row) for row in cursor.execute("SELECT * FROM Employee_Details")]
+    [print(row) for row in cursor.execute("SELECT * FROM Salary_Details")]
+    deposit_salary()
+    [print(row) for row in cursor.execute("SELECT * FROM Account_Details")]
+    print(get_current_time())
+
+
