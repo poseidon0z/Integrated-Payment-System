@@ -13,7 +13,205 @@ from PyQt5.QtWidgets import (
     QDialog,
     QLineEdit,
     QPlainTextEdit,
+    QComboBox,
+    QMessageBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QHeaderView,
 )
+
+shop_items = {
+    "apple": [40, 200],
+    "banana": [10, 400],
+    "lays": [20, 50],
+    "kurkure": [20, 100],
+}
+
+cart = {}
+
+
+from PyQt5.QtWidgets import QComboBox
+
+
+class CheckoutWindow(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Checkout")
+        self.setModal(True)  # Make it modal to block interactions with parent window
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout()
+
+        # Customer ID input
+        self.customer_id_edit = QLineEdit()
+        self.customer_id_edit.setPlaceholderText("Customer ID")
+        layout.addWidget(self.customer_id_edit)
+
+        # Account number input
+        self.account_number_edit = QLineEdit()
+        self.account_number_edit.setPlaceholderText("Account Number")
+        layout.addWidget(self.account_number_edit)
+
+        # Voucher code input
+        self.voucher_code_edit = QLineEdit()
+        self.voucher_code_edit.setPlaceholderText("Voucher Code (Optional)")
+        layout.addWidget(self.voucher_code_edit)
+
+        # Mode of payment input (Dropdown)
+        self.payment_mode_combo = QComboBox()
+        self.payment_mode_combo.addItem("Integrated pay")
+        self.payment_mode_combo.addItem("Cash/Cards")
+        layout.addWidget(self.payment_mode_combo)
+
+        # Cart table
+        self.cart_table = QTableWidget()
+        self.cart_table.setColumnCount(
+            4
+        )  # Added an extra column for total price per item
+        self.cart_table.setHorizontalHeaderLabels(
+            ["Item", "Price", "Quantity", "Total Price"]
+        )  # Added column header for total price
+        self.cart_table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.Stretch
+        )  # Stretch columns to fill the available space
+        layout.addWidget(self.cart_table)
+
+        # Total bill label
+        self.total_bill_label = QLabel()
+        layout.addWidget(self.total_bill_label)
+
+        self.populate_cart_table()
+
+        # Checkout button
+        self.checkout_button = QPushButton("Checkout")
+        self.checkout_button.clicked.connect(self.checkout)
+        layout.addWidget(self.checkout_button)
+
+        self.setLayout(layout)
+
+    def populate_cart_table(self):
+        total_bill = 0  # Initialize total bill amount
+        self.cart_table.setRowCount(len(cart))
+        for i, (item, quantity) in enumerate(cart.items()):
+            price, _ = shop_items[item]
+            total_price = price * quantity
+            total_bill += (
+                total_price  # Add total price of current item to total bill amount
+            )
+
+            # Set item details in the table
+            self.cart_table.setItem(i, 0, QTableWidgetItem(item))
+            self.cart_table.setItem(i, 1, QTableWidgetItem(str(price)))
+            self.cart_table.setItem(i, 2, QTableWidgetItem(str(quantity)))
+            self.cart_table.setItem(
+                i, 3, QTableWidgetItem(str(total_price))
+            )  # Display total price per item
+
+        # Set total bill amount label text
+        self.total_bill_label.setText(f"Total Bill: {total_bill}")
+
+    def checkout(self):
+        # Get input values
+        customer_id = self.customer_id_edit.text()
+        account_number = self.account_number_edit.text()
+        voucher_code = self.voucher_code_edit.text()
+        payment_mode = (
+            self.payment_mode_combo.currentText()
+        )  # Get selected payment mode from the dropdown
+
+        # Calculate total bill amount
+        total_bill = 0
+        for item, quantity in cart.items():
+            price, _ = shop_items[item]
+            total_bill += price * quantity
+
+        # Confirmation dialog
+        confirmation = QMessageBox.question(
+            self,
+            "Confirmation",
+            f"Are you sure you want to checkout with a bill of {total_bill}?",
+            QMessageBox.Yes | QMessageBox.No,
+        )
+
+        if confirmation == QMessageBox.Yes:
+            if voucher_code == "":
+                voucher_code = None
+
+            add_Purchase_Details(
+                "0", customer_id, account_number, total_bill, voucher_code, payment_mode
+            )
+            # # Call your checkout function here, passing the input values and total bill amount
+            # print(
+            #     f"Running checkout function with Customer ID: {customer_id}, Account Number: {account_number}, Voucher Code: {voucher_code}, Mode of Payment: {payment_mode}, Total Bill Amount: {total_bill}"
+            # )
+
+
+class AddToCartWindow(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Add Items to Cart")
+        self.setModal(True)  # Make it modal to block interactions with parent window
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout()
+
+        self.item_combo = QComboBox()
+        self.item_combo.addItems(shop_items.keys())
+        layout.addWidget(self.item_combo)
+
+        self.quantity_edit = QLineEdit()
+        self.quantity_edit.setPlaceholderText("Enter Quantity")
+        layout.addWidget(self.quantity_edit)
+
+        self.submit_button = QPushButton("Add to Cart")
+        self.submit_button.clicked.connect(self.add_to_cart)
+        layout.addWidget(self.submit_button)
+
+        self.setLayout(layout)
+
+    def add_to_cart(self):
+        item_name = self.item_combo.currentText()
+        quantity = self.quantity_edit.text()
+
+        # Validate input
+        if not quantity:
+            self.show_message("Error", "Please enter the quantity.")
+            return
+
+        quantity = int(quantity)
+
+        if quantity <= 0:
+            self.show_message("Error", "Please enter a valid quantity.")
+            return
+
+        if item_name not in shop_items:
+            self.show_message("Error", "Invalid item selected.")
+            return
+
+        price, inventory = shop_items[item_name]
+
+        if quantity > inventory:
+            self.show_message(
+                "Error", f"Only {inventory} items available in inventory."
+            )
+            return
+
+        # Add to cart
+        if item_name in cart:
+            cart[item_name] += quantity
+        else:
+            cart[item_name] = quantity
+
+        # Update inventory
+        shop_items[item_name][1] -= quantity
+
+        self.show_message("Success", "Item(s) added to cart.")
+        self.accept()  # Close the dialog
+
+    def show_message(self, title, message):
+        QMessageBox.information(self, title, message)
 
 
 class EmployeeRegistrationWindow(QDialog):
@@ -345,7 +543,6 @@ class MainWindow(QWidget):
     def display_office_functions(self):
         self.clear_layout()
         self.setjobbutton()
-        self.setpromotionbutton()
         self.setsalarybutton()
         self.sethomebutton()
 
@@ -389,16 +586,14 @@ class MainWindow(QWidget):
         self.checkout_button.setIcon(QIcon("./Images/checkout.png"))
         self.checkout_button.setIconSize(QSize(100, 100))
         self.main_layout.addWidget(self.checkout_button)
-        self.checkout_button.clicked.connect(lambda: print("Customer is checking out"))
+        self.checkout_button.clicked.connect(self.open_checkout_window)
 
     def setaddcartbutton(self):
         self.add_to_cart_button = QPushButton("Add to Cart")
         self.add_to_cart_button.setIcon(QIcon("./Images/addtocart.jpeg"))
         self.add_to_cart_button.setIconSize(QSize(100, 100))
         self.main_layout.addWidget(self.add_to_cart_button)
-        self.add_to_cart_button.clicked.connect(
-            lambda: print("Customer added item to cart")
-        )
+        self.add_to_cart_button.clicked.connect(self.open_add_to_cart_window)
 
     def setjobbutton(self):
         self.job_button = QPushButton("Join Job")
@@ -407,19 +602,12 @@ class MainWindow(QWidget):
         self.main_layout.addWidget(self.job_button)
         self.job_button.clicked.connect(self.open_new_employee_window)
 
-    def setpromotionbutton(self):
-        self.promotion_button = QPushButton("Get Promotion")
-        self.promotion_button.setIcon(QIcon("./Images/promotion.jpeg"))
-        self.promotion_button.setIconSize(QSize(100, 100))
-        self.main_layout.addWidget(self.promotion_button)
-        self.promotion_button.clicked.connect(lambda: print("Somone got a promotion"))
-
     def setsalarybutton(self):
         self.salary_button = QPushButton("Get Salary")
         self.salary_button.setIcon(QIcon("./Images/salary.png"))
         self.salary_button.setIconSize(QSize(100, 100))
         self.main_layout.addWidget(self.salary_button)
-        self.salary_button.clicked.connect(lambda: print("Someone got salary"))
+        self.salary_button.clicked.connect(self.give_salaries)
 
     def settransactionbutton(self):
         self.transaction_button = QPushButton("See Transaction History")
@@ -469,6 +657,26 @@ class MainWindow(QWidget):
         dialog = CustomerRegistrationWindow(self)
         if dialog.exec_() == QDialog.Accepted:
             print("Customer Registration Successful")
+
+    def open_add_to_cart_window(self):
+        dialog = AddToCartWindow(self)
+        dialog.exec_()
+
+    def open_checkout_window(self):
+        dialog = CheckoutWindow(self)
+        dialog.exec_()
+
+    def give_salaries(self):
+        confirmation = QMessageBox.question(
+            None,
+            "Confirmation",
+            "Are you sure you want to give salary to all employees?",
+            QMessageBox.Yes | QMessageBox.No,
+        )
+
+        if confirmation == QMessageBox.Yes:
+            # Call your function here
+            deposit_salary()
 
 
 if __name__ == "__main__":
