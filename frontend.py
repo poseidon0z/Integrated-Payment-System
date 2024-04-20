@@ -16,6 +16,65 @@ from PyQt5.QtWidgets import (
 )
 
 
+class EmployeeRegistrationWindow(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Employee Registration")
+        self.setModal(
+            True
+        )  # Make it modal to block interactions with the parent window
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout()
+
+        self.employee_id_edit = QLineEdit()
+        self.employee_id_edit.setPlaceholderText("Enter Employee ID")
+        layout.addWidget(self.employee_id_edit)
+
+        self.account_number_edit = QLineEdit()
+        self.account_number_edit.setPlaceholderText("Enter Account Number")
+        layout.addWidget(self.account_number_edit)
+
+        self.designation_edit = QLineEdit()
+        self.designation_edit.setPlaceholderText("Enter Designation")
+        layout.addWidget(self.designation_edit)
+
+        self.department_edit = QLineEdit()
+        self.department_edit.setPlaceholderText("Enter Department")
+        layout.addWidget(self.department_edit)
+
+        self.team_edit = QLineEdit()
+        self.team_edit.setPlaceholderText("Enter Team")
+        layout.addWidget(self.team_edit)
+
+        self.submit_button = QPushButton("Submit")
+        self.submit_button.clicked.connect(self.submit_registration)
+        layout.addWidget(self.submit_button)
+
+        self.setLayout(layout)
+
+    def submit_registration(self):
+        employee_id = self.employee_id_edit.text()
+        account_number = self.account_number_edit.text()
+        designation = self.designation_edit.text()
+        department = self.department_edit.text()
+        team = self.team_edit.text()
+
+        if not (employee_id and account_number and designation and department and team):
+            QMessageBox.critical(self, "Error", "Please provide all inputs.")
+            return
+
+        add_Employee_Details(
+            employee_id, 0, account_number, designation, department, team
+        )
+
+        # For demonstration purposes, I'm just showing a success message
+        QMessageBox.information(self, "Success", f"Employee registered successfully!")
+
+        self.accept()  # Close the dialog
+
+
 class AadharRegistrationWindow(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -184,6 +243,65 @@ class GetBalanceWindow(QDialog):
         self.accept()  # Close the dialog
 
 
+class CustomerRegistrationWindow(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Customer Registration")
+        self.setModal(
+            True
+        )  # Make it modal to block interactions with the parent window
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout()
+
+        self.customer_id_edit = QLineEdit()
+        self.customer_id_edit.setPlaceholderText("Enter Customer ID")
+        layout.addWidget(self.customer_id_edit)
+
+        self.first_name_edit = QLineEdit()
+        self.first_name_edit.setPlaceholderText("Enter First Name")
+        layout.addWidget(self.first_name_edit)
+
+        self.middle_name_edit = QLineEdit()
+        self.middle_name_edit.setPlaceholderText("Enter Middle Name")
+        layout.addWidget(self.middle_name_edit)
+
+        self.last_name_edit = QLineEdit()
+        self.last_name_edit.setPlaceholderText("Enter Last Name")
+        layout.addWidget(self.last_name_edit)
+
+        self.mobile_number_edit = QLineEdit()
+        self.mobile_number_edit.setPlaceholderText("Enter Mobile Number")
+        layout.addWidget(self.mobile_number_edit)
+
+        self.submit_button = QPushButton("Submit")
+        self.submit_button.clicked.connect(self.submit_registration)
+        layout.addWidget(self.submit_button)
+
+        self.setLayout(layout)
+
+    def submit_registration(self):
+        customer_id = self.customer_id_edit.text()
+        first_name = self.first_name_edit.text()
+        middle_name = self.middle_name_edit.text()
+        last_name = self.last_name_edit.text()
+        mobile_number = self.mobile_number_edit.text()
+
+        if not (customer_id and first_name and last_name and mobile_number):
+            QMessageBox.critical(self, "Error", "Please provide all inputs.")
+            return
+
+        add_customer_Details(
+            customer_id, first_name, middle_name, last_name, mobile_number
+        )
+
+        # For demonstration purposes, I'm just showing a success message
+        QMessageBox.information(self, "Success", f"Customer registered successfully!")
+
+        self.accept()  # Close the dialog
+
+
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -264,12 +382,7 @@ class MainWindow(QWidget):
         self.registration_button.setIcon(QIcon("./Images/register.png"))
         self.registration_button.setIconSize(QSize(100, 100))
         self.main_layout.addWidget(self.registration_button)
-        self.registration_button.clicked.connect(
-            lambda: print("Registering a new customer")
-        )
-
-    def customerRegistration(self):
-        return
+        self.registration_button.clicked.connect(self.open_new_customer_window)
 
     def setcheckoutbutton(self):
         self.checkout_button = QPushButton("Checkout")
@@ -292,7 +405,7 @@ class MainWindow(QWidget):
         self.job_button.setIcon(QIcon("./Images/joinus.jpeg"))
         self.job_button.setIconSize(QSize(100, 100))
         self.main_layout.addWidget(self.job_button)
-        self.job_button.clicked.connect(lambda: print("New employee joined"))
+        self.job_button.clicked.connect(self.open_new_employee_window)
 
     def setpromotionbutton(self):
         self.promotion_button = QPushButton("Get Promotion")
@@ -346,6 +459,16 @@ class MainWindow(QWidget):
         dialog = AadharRegistrationWindow(self)
         if dialog.exec_() == QDialog.Accepted:
             print("Aadhar Registration Submitted")
+
+    def open_new_employee_window(self):
+        dialog = EmployeeRegistrationWindow(self)
+        if dialog.exec_() == QDialog.Accepted:
+            print("Employee Registration Submitted")
+
+    def open_new_customer_window(self):
+        dialog = CustomerRegistrationWindow(self)
+        if dialog.exec_() == QDialog.Accepted:
+            print("Customer Registration Successful")
 
 
 if __name__ == "__main__":
